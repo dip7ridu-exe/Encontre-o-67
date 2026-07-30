@@ -3,60 +3,205 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Encontre-o-67</title>
+<title>Encontre o 67</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0b0b0d;--surface:#17171b;--surface-2:#1e1e23;--border:#2a2a30;--text:#f2f0ea;--text-muted:#8d8d96;--accent:#d4a857;--accent-dim:rgba(212,168,87,.14);--danger:#b5453a;--radius:16px;--font-display:'Fraunces',serif;--font-body:'Work Sans',sans-serif;--font-mono:'JetBrains Mono',monospace}
-*{margin:0;padding:0;box-sizing:border-box}body{font-family:var(--font-body);background:var(--bg);color:var(--text)}
-header{background:rgba(11,11,13,.85);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);padding:28px 20px 22px;text-align:center;position:sticky;top:0;z-index:10}
-header h1{font-family:var(--font-display);font-weight:600;font-size:clamp(28px,4vw,38px)}
-header p{margin-top:6px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-muted)}
-main{max-width:1400px;margin:auto;padding:32px 20px 60px}.toolbar{display:flex;justify-content:center;background:var(--surface);border:1px solid var(--border);padding:16px;border-radius:var(--radius)}
-.toolbar button{padding:11px 20px;border-radius:10px;border:none;background:var(--accent);color:#1a1305;font-weight:600;cursor:pointer}
-#status{min-height:20px;margin-top:14px;font-family:var(--font-mono);font-size:12px;color:var(--accent);text-align:center}
-.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;margin-top:24px}
-.card{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;aspect-ratio:4/5}
-.card img{width:100%;height:100%;object-fit:cover;cursor:pointer}.info{position:absolute;left:0;right:0;bottom:0;padding:28px 12px 10px;background:linear-gradient(180deg,transparent,rgba(0,0,0,.82) 55%);font-family:var(--font-mono);font-size:11px}
-.modal{display:none;position:fixed;inset:0;background:rgba(6,6,7,.94);justify-content:center;align-items:center;z-index:20}.modal img{max-width:90%;max-height:90%;border-radius:8px}
+:root{
+  --bg:#0b0b0d;
+  --surface:#17171b;
+  --surface-2:#1e1e23;
+  --border:#2a2a30;
+  --text:#f2f0ea;
+  --text-muted:#8d8d96;
+  --accent:#d4a857;
+  --radius:16px;
+  --font-display:'Fraunces',serif;
+  --font-body:'Work Sans',sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+
+header{
+  position:sticky;
+  top:0;
+  z-index:10;
+  background:rgba(11,11,13,.85);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--border);
+  padding:28px 20px 22px;
+  text-align:center;
+}
+header h1{
+  font-family:var(--font-display);
+  font-weight:600;
+  font-size:clamp(28px,4vw,38px);
+  letter-spacing:-.02em;
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+}
+header h1::before{
+  content:'';
+  width:8px;height:8px;border-radius:50%;
+  background:var(--accent);
+  display:inline-block;
+}
+header p{
+  margin-top:6px;
+  font-size:12px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--text-muted);
+}
+
+main{max-width:900px;margin:auto;padding:40px 20px 60px;text-align:center}
+
+#status{
+  min-height:20px;
+  margin-bottom:20px;
+  font-family:var(--font-mono);
+  font-size:12px;
+  color:var(--accent);
+  letter-spacing:.02em;
+}
+
+.play-area{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:40px 24px;
+}
+
+#generateBtn{
+  padding:18px 40px;
+  border-radius:14px;
+  border:none;
+  background:var(--accent);
+  color:#1a1305;
+  font-family:var(--font-display);
+  font-weight:700;
+  font-size:20px;
+  cursor:pointer;
+  transition:filter .15s ease,transform .15s ease;
+  margin-bottom:30px;
+}
+#generateBtn:hover{filter:brightness(1.08)}
+#generateBtn:active{transform:scale(.97)}
+
+.image-frame{
+  width:100%;
+  max-width:500px;
+  margin:0 auto;
+  aspect-ratio:4/5;
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  position:relative;
+}
+.image-frame img,.image-frame video{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+.image-frame .placeholder{
+  color:var(--text-muted);
+  font-family:var(--font-mono);
+  font-size:13px;
+  padding:20px;
+}
+
+#result{
+  margin-top:24px;
+  font-family:var(--font-display);
+  font-weight:600;
+  font-size:24px;
+  min-height:36px;
+}
+#result.win{color:var(--accent)}
+#result.lose{color:var(--text-muted)}
 </style>
 </head>
 <body>
+
 <header>
-<h1>Encontre-o-67</h1>
-<p>Encontre a imagem premiada</p>
+  <h1>Encontre o 67</h1>
+  <p>Ache a imagem com o número 67 escondida entre os memes</p>
 </header>
+
 <main>
-<div class="toolbar">
-<button onclick="gerarImagem()">Gerar Imagem</button>
-</div>
-<div id="status"></div>
-<div class="gallery" id="gallery"></div>
+  <div id="status"></div>
+
+  <div class="play-area">
+    <button id="generateBtn" onclick="generateRandom()">🎲 Gerar imagem aleatória</button>
+    <div class="image-frame" id="imageFrame">
+      <div class="placeholder">Clique no botão para sortear uma imagem</div>
+    </div>
+    <div id="result"></div>
+  </div>
 </main>
-<div class="modal" id="modal" onclick="this.style.display='none'"></div>
+
 <script>
 const SUPABASE_URL='https://uwywbspdbmxrnmkdborm.supabase.co';
 const SUPABASE_KEY='sb_publishable_AVWh-xt26lQJcZuf0r9xSw_Gxrmjbt5';
 const client=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const bucket='midias';
-let imagens=[];
-async function carregarImagens(){
- const {data,error}=await client.storage.from(bucket).list('',{limit:1000});
- if(error){document.getElementById('status').innerText=error.message;return;}
- imagens=data.map(file=>({nome:file.name,url:client.storage.from(bucket).getPublicUrl(file.name).data.publicUrl,vencedor:file.name.toLowerCase().startsWith('67')}));
+
+let fileList=[];
+
+async function loadFileList(){
+  const {data,error}=await client.storage.from(bucket).list('',{limit:1000});
+  if(error){
+    document.getElementById('status').innerText='Erro ao carregar arquivos: '+error.message;
+    return;
+  }
+  fileList=data.filter(f=>f.name && !f.name.endsWith('/'));
+  document.getElementById('status').innerText=fileList.length+' imagens carregadas';
 }
-async function gerarImagem(){
- if(imagens.length===0) await carregarImagens();
- if(imagens.length===0){alert('Nenhuma imagem encontrada.');return;}
- const sorteada=imagens[Math.floor(Math.random()*imagens.length)];
- const gallery=document.getElementById('gallery');
- gallery.innerHTML=`<div class="card"><img src="${sorteada.url}" onclick="openMedia('${sorteada.url}')"><div class="info">${sorteada.nome}</div></div>`;
- document.getElementById('status').innerHTML=sorteada.vencedor?'🎉 VOCÊ ENCONTROU O 67!':'❌ Não foi dessa vez';
+
+function generateRandom(){
+  if(!fileList.length){
+    document.getElementById('status').innerText='Nenhuma imagem disponível no bucket.';
+    return;
+  }
+  const pick=fileList[Math.floor(Math.random()*fileList.length)];
+  const {data:urlData}=client.storage.from(bucket).getPublicUrl(pick.name);
+  const url=urlData.publicUrl;
+  const isVideo=/\.(mp4|mov|webm|avi|mkv)$/i.test(pick.name);
+  const frame=document.getElementById('imageFrame');
+  frame.innerHTML='';
+
+  if(isVideo){
+    const v=document.createElement('video');
+    v.src=url;v.controls=true;v.autoplay=true;
+    frame.appendChild(v);
+  }else{
+    const img=document.createElement('img');
+    img.src=url;
+    frame.appendChild(img);
+  }
+
+  const resultEl=document.getElementById('result');
+  const has67=pick.name.includes('67');
+  if(has67){
+    resultEl.innerText='🎉 Você achou o 67! Parabéns!';
+    resultEl.className='win';
+  }else{
+    resultEl.innerText='Não é essa... tente de novo!';
+    resultEl.className='lose';
+  }
 }
-function openMedia(url){const modal=document.getElementById('modal');modal.style.display='flex';modal.innerHTML=`<img src="${url}">`;}
-carregarImagens();
+
+loadFileList();
 </script>
 </body>
 </html>
