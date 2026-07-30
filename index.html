@@ -2,71 +2,60 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Encontre o 67</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Encontre-o-67</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0b0b0d;--surface:#17171b;--border:#2a2a30;--text:#f2f0ea;--text-muted:#8d8d96;--accent:#d4a857;--radius:16px;--font-display:'Fraunces',serif;--font-body:'Work Sans',sans-serif}
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:var(--bg);color:var(--text);font-family:var(--font-body);min-height:100vh}
-header{text-align:center;padding:40px 20px;border-bottom:1px solid var(--border)}
-header h1{font-family:var(--font-display);font-size:52px}
-header p{margin-top:10px;color:var(--text-muted)}
-main{max-width:1000px;margin:auto;padding:40px 20px}
-.game{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:30px;text-align:center}
-.generate{padding:16px 34px;border:none;border-radius:14px;background:var(--accent);color:#111;font-size:16px;font-weight:700;cursor:pointer;transition:.2s}
-.generate:hover{transform:translateY(-2px);filter:brightness(1.05)}
-.image-box{margin-top:30px}
-.image-box img{max-width:100%;max-height:600px;border-radius:16px;display:none;margin:auto}
-.result{margin-top:22px;font-size:28px;font-weight:700}
-.win{color:#22c55e}.lose{color:#ef4444}.info{margin-top:15px;color:var(--text-muted)}
+:root{--bg:#0b0b0d;--surface:#17171b;--surface-2:#1e1e23;--border:#2a2a30;--text:#f2f0ea;--text-muted:#8d8d96;--accent:#d4a857;--accent-dim:rgba(212,168,87,.14);--danger:#b5453a;--radius:16px;--font-display:'Fraunces',serif;--font-body:'Work Sans',sans-serif;--font-mono:'JetBrains Mono',monospace}
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:var(--font-body);background:var(--bg);color:var(--text)}
+header{background:rgba(11,11,13,.85);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);padding:28px 20px 22px;text-align:center;position:sticky;top:0;z-index:10}
+header h1{font-family:var(--font-display);font-weight:600;font-size:clamp(28px,4vw,38px)}
+header p{margin-top:6px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-muted)}
+main{max-width:1400px;margin:auto;padding:32px 20px 60px}.toolbar{display:flex;justify-content:center;background:var(--surface);border:1px solid var(--border);padding:16px;border-radius:var(--radius)}
+.toolbar button{padding:11px 20px;border-radius:10px;border:none;background:var(--accent);color:#1a1305;font-weight:600;cursor:pointer}
+#status{min-height:20px;margin-top:14px;font-family:var(--font-mono);font-size:12px;color:var(--accent);text-align:center}
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;margin-top:24px}
+.card{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;aspect-ratio:4/5}
+.card img{width:100%;height:100%;object-fit:cover;cursor:pointer}.info{position:absolute;left:0;right:0;bottom:0;padding:28px 12px 10px;background:linear-gradient(180deg,transparent,rgba(0,0,0,.82) 55%);font-family:var(--font-mono);font-size:11px}
+.modal{display:none;position:fixed;inset:0;background:rgba(6,6,7,.94);justify-content:center;align-items:center;z-index:20}.modal img{max-width:90%;max-height:90%;border-radius:8px}
 </style>
 </head>
 <body>
 <header>
-<h1>Encontre o 67</h1>
-<p>Clique no botão e tente encontrar a imagem vencedora.</p>
+<h1>Encontre-o-67</h1>
+<p>Encontre a imagem premiada</p>
 </header>
 <main>
-<div class="game">
-<button class="generate" onclick="gerarImagem()">Gerar Imagem</button>
-<div class="image-box">
-<img id="imagemSorteada" alt="Imagem sorteada">
+<div class="toolbar">
+<button onclick="gerarImagem()">Gerar Imagem</button>
 </div>
-<div id="resultado" class="result"></div>
-<div class="info" id="info">Imagens carregadas do bucket Midias67.</div>
-</div>
+<div id="status"></div>
+<div class="gallery" id="gallery"></div>
 </main>
+<div class="modal" id="modal" onclick="this.style.display='none'"></div>
 <script>
 const SUPABASE_URL='https://uwywbspdbmxrnmkdborm.supabase.co';
 const SUPABASE_KEY='sb_publishable_AVWh-xt26lQJcZuf0r9xSw_Gxrmjbt5';
 const client=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-const bucket='Midias67';
+const bucket='midias';
 let imagens=[];
 async function carregarImagens(){
  const {data,error}=await client.storage.from(bucket).list('',{limit:1000});
- if(error){document.getElementById('info').textContent='Erro: '+error.message;return;}
- imagens=data.filter(f=>f.name).map(file=>({
-  nome:file.name,
-  url:client.storage.from(bucket).getPublicUrl(file.name).data.publicUrl,
-  vencedor:file.name.toLowerCase()==='67.jpg'
- }));
- document.getElementById('info').textContent=imagens.length+' imagens encontradas.';
+ if(error){document.getElementById('status').innerText=error.message;return;}
+ imagens=data.map(file=>({nome:file.name,url:client.storage.from(bucket).getPublicUrl(file.name).data.publicUrl,vencedor:file.name.toLowerCase().startsWith('67')}));
 }
 async function gerarImagem(){
- if(imagens.length===0){await carregarImagens();}
- if(imagens.length===0){alert('Nenhuma imagem encontrada no bucket Midias67');return;}
+ if(imagens.length===0) await carregarImagens();
+ if(imagens.length===0){alert('Nenhuma imagem encontrada.');return;}
  const sorteada=imagens[Math.floor(Math.random()*imagens.length)];
- const img=document.getElementById('imagemSorteada');
- img.src=sorteada.url+'?t='+Date.now();
- img.style.display='block';
- const r=document.getElementById('resultado');
- if(sorteada.vencedor){r.className='result win';r.textContent='VOCÊ ENCONTROU O 67!';}
- else{r.className='result lose';r.textContent='Ainda não foi dessa vez';}
- }
+ const gallery=document.getElementById('gallery');
+ gallery.innerHTML=`<div class="card"><img src="${sorteada.url}" onclick="openMedia('${sorteada.url}')"><div class="info">${sorteada.nome}</div></div>`;
+ document.getElementById('status').innerHTML=sorteada.vencedor?'🎉 VOCÊ ENCONTROU O 67!':'❌ Não foi dessa vez';
+}
+function openMedia(url){const modal=document.getElementById('modal');modal.style.display='flex';modal.innerHTML=`<img src="${url}">`;}
 carregarImagens();
 </script>
 </body>
