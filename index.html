@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Encontre o 67</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -92,6 +91,7 @@ main{max-width:900px;margin:auto;padding:40px 20px 60px;text-align:center}
 }
 #generateBtn:hover{filter:brightness(1.08)}
 #generateBtn:active{transform:scale(.97)}
+#generateBtn:disabled{opacity:.6;cursor:not-allowed}
 
 .image-frame{
   width:100%;
@@ -107,7 +107,7 @@ main{max-width:900px;margin:auto;padding:40px 20px 60px;text-align:center}
   overflow:hidden;
   position:relative;
 }
-.image-frame img,.image-frame video{
+.image-frame img{
   width:100%;
   height:100%;
   object-fit:cover;
@@ -119,6 +119,11 @@ main{max-width:900px;margin:auto;padding:40px 20px 60px;text-align:center}
   font-size:13px;
   padding:20px;
 }
+.image-frame .loading{
+  color:var(--text-muted);
+  font-family:var(--font-mono);
+  font-size:13px;
+}
 
 #result{
   margin-top:24px;
@@ -129,6 +134,13 @@ main{max-width:900px;margin:auto;padding:40px 20px 60px;text-align:center}
 }
 #result.win{color:var(--accent)}
 #result.lose{color:var(--text-muted)}
+
+#score{
+  margin-top:16px;
+  font-family:var(--font-mono);
+  font-size:12px;
+  color:var(--text-muted);
+}
 </style>
 </head>
 <body>
@@ -147,61 +159,76 @@ main{max-width:900px;margin:auto;padding:40px 20px 60px;text-align:center}
       <div class="placeholder">Clique no botão para sortear uma imagem</div>
     </div>
     <div id="result"></div>
+    <div id="score">Tentativas: 0 | Vitórias: 0</div>
   </div>
 </main>
 
 <script>
-const SUPABASE_URL='https://uwywbspdbmxrnmkdborm.supabase.co';
-const SUPABASE_KEY='sb_publishable_AVWh-xt26lQJcZuf0r9xSw_Gxrmjbt5';
-const client=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-const bucket='midias';
+// ===== CONFIGURAÇÃO =====
+// Cole aqui o link direto da imagem do meme "67" (após hospedar em Imgur, ImgBB, etc.)
+const URL_IMAGEM_67 = "COLE_AQUI_O_LINK_DA_IMAGEM_67";
 
-let fileList=[];
+// Chance de a imagem "67" aparecer no sorteio (ex: 0.15 = 15%)
+const CHANCE_DE_67 = 0.15;
+// =========================
 
-async function loadFileList(){
-  const {data,error}=await client.storage.from(bucket).list('',{limit:1000});
-  if(error){
-    document.getElementById('status').innerText='Erro ao carregar arquivos: '+error.message;
-    return;
-  }
-  fileList=data.filter(f=>f.name && !f.name.endsWith('/'));
-  document.getElementById('status').innerText=fileList.length+' imagens carregadas';
-}
+let tentativas = 0;
+let vitorias = 0;
+let carregando = false;
 
 function generateRandom(){
-  if(!fileList.length){
-    document.getElementById('status').innerText='Nenhuma imagem disponível no bucket.';
-    return;
-  }
-  const pick=fileList[Math.floor(Math.random()*fileList.length)];
-  const {data:urlData}=client.storage.from(bucket).getPublicUrl(pick.name);
-  const url=urlData.publicUrl;
-  const isVideo=/\.(mp4|mov|webm|avi|mkv)$/i.test(pick.name);
-  const frame=document.getElementById('imageFrame');
-  frame.innerHTML='';
+  if(carregando) return;
+  carregando = true;
 
-  if(isVideo){
-    const v=document.createElement('video');
-    v.src=url;v.controls=true;v.autoplay=true;
-    frame.appendChild(v);
-  }else{
-    const img=document.createElement('img');
-    img.src=url;
+  const btn = document.getElementById('generateBtn');
+  const frame = document.getElementById('imageFrame');
+  const resultEl = document.getElementById('result');
+
+  btn.disabled = true;
+  frame.innerHTML = '<div class="loading">Carregando...</div>';
+  resultEl.innerText = '';
+  resultEl.className = '';
+
+  const sorteou67 = Math.random() < CHANCE_DE_67;
+  let url;
+
+  if(sorteou67){
+    url = URL_IMAGEM_67;
+  } else {
+    // Picsum Photos - imagens aleatórias gratuitas
+    const seed = Date.now() + Math.floor(Math.random()*100000);
+    url = `https://picsum.photos/seed/${seed}/500/600`;
+  }
+
+  const img = new Image();
+  img.onload = () => {
+    frame.innerHTML = '';
     frame.appendChild(img);
-  }
+    img.style.width = '100%';
+    img.style.height = '100%';
+    img.style.objectFit = 'cover';
 
-  const resultEl=document.getElementById('result');
-  const has67=pick.name.includes('67');
-  if(has67){
-    resultEl.innerText='🎉 Você achou o 67! Parabéns!';
-    resultEl.className='win';
-  }else{
-    resultEl.innerText='Não é essa... tente de novo!';
-    resultEl.className='lose';
-  }
+    tentativas++;
+    if(sorteou67){
+      vitorias++;
+      resultEl.innerText = '🎉 Você achou o 67! Parabéns!';
+      resultEl.className = 'win';
+    } else {
+      resultEl.innerText = 'Não é essa... tente de novo!';
+      resultEl.className = 'lose';
+    }
+    document.getElementById('score').innerText = `Tentativas: ${tentativas} | Vitórias: ${vitorias}`;
+
+    btn.disabled = false;
+    carregando = false;
+  };
+  img.onerror = () => {
+    frame.innerHTML = '<div class="placeholder">Erro ao carregar imagem. Tente novamente.</div>';
+    btn.disabled = false;
+    carregando = false;
+  };
+  img.src = url;
 }
-
-loadFileList();
 </script>
 </body>
 </html>
